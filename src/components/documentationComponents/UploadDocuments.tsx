@@ -22,6 +22,7 @@ const UploadDocuments: React.FC<UploadDocumentsProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const { handleSuccess, handleError } = useAuth();
   const cancelFileUploadRef = useRef<null | (() => void)>(null);
+  const userId = localStorage.getItem("user_id");
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
@@ -109,6 +110,10 @@ const UploadDocuments: React.FC<UploadDocumentsProps> = ({
       formData.append("files", file);
     });
 
+    // if (userId) {
+    //   formData.append("user_id", userId);
+    // }
+
     try {
       const cancelTokenSource = axios.CancelToken.source();
       cancelFileUploadRef.current = cancelTokenSource.cancel;
@@ -120,7 +125,7 @@ const UploadDocuments: React.FC<UploadDocumentsProps> = ({
 
       // Make the actual upload request
       const response = await axios.post(
-        `${backendURL}/api/upload-document?namespace=buildRFI`,
+        `${backendURL}/api/upload-document?namespace=buildRFI&user_id=${userId}`,
         formData,
         {
           headers: {
