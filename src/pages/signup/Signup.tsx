@@ -13,15 +13,23 @@ const Signup: React.FC = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
 
+  const resetForm = () => {
+    setUsername("");
+    setEmail("");
+    setPassword("");
+    setShowPassword(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       setIsLoading(true);
       const data = await signup(username, email, password);
-      if (data.status_code === 200) {
+      if (data) {
         navigate(ROUTES.login);
       }
+      resetForm();
     } catch (error) {
       console.error("Signup error:", error);
     } finally {
