@@ -392,7 +392,7 @@ const Chat: React.FC = () => {
             {/* Hamburger menu for mobile */}
             {!sidebarOpen && (
               <button
-                className="fixed top-20 left-4 z-50 p-2 rounded-full bg-indigo-600 text-white shadow-lg"
+                className="fixed top-20 left-4 z-50 p-2 rounded-full bg-indigo-600 !text-white shadow-lg"
                 onClick={() => setSidebarOpen(true)}
               >
                 <FiMenu size={24} />
@@ -587,7 +587,7 @@ const Chat: React.FC = () => {
                       !inputMessage.trim() || loading
                         ? "bg-indigo-400 cursor-not-allowed"
                         : "bg-indigo-600 hover:bg-indigo-700"
-                    } text-white px-4 py-2 rounded-lg font-medium flex items-center`}
+                    } !text-white px-4 py-2 rounded-lg font-medium flex items-center`}
                     onClick={handleSendMessage}
                     disabled={!inputMessage.trim() || loading}
                   >
