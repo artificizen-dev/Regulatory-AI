@@ -442,7 +442,7 @@ const Navbar: React.FC = () => {
             <div className="md:hidden flex items-center ml-auto space-x-4">
               <Link
                 to={ROUTES.login}
-                className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-1.5 rounded-full transition-colors font-medium text-sm"
+                className="bg-indigo-500 hover:bg-indigo-600 !text-white px-4 py-1.5 rounded-full transition-colors font-medium text-sm"
               >
                 Go To App
               </Link>
