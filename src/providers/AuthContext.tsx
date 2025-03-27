@@ -16,6 +16,7 @@ interface User {
   user_id: string;
   username: string;
   email: string;
+  isAdmin: boolean;
 }
 
 interface AuthContextProps {
@@ -83,6 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user_id,
         username: responseUsername,
         email,
+        isAdmin,
       } = response.data;
 
       // If response contains status_code field
@@ -97,6 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user_id: user_id.toString(),
         username: responseUsername,
         email: email,
+        isAdmin: isAdmin,
       };
 
       // Update state

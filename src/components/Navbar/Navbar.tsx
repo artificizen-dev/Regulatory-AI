@@ -197,6 +197,7 @@ const Navbar: React.FC = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  console.log(user);
 
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
@@ -276,16 +277,18 @@ const Navbar: React.FC = () => {
                 >
                   Chat
                 </Link>
-                <Link
-                  to={ROUTES.documentation}
-                  className={`text-primary hover:text-primary-hover transition-colors font-medium mx-4 ${
-                    location.pathname.includes(ROUTES.documentation)
-                      ? "text-indigo-700 font-bold"
-                      : ""
-                  }`}
-                >
-                  Documentation
-                </Link>
+                {user?.isAdmin && (
+                  <Link
+                    to={ROUTES.documentation}
+                    className={`text-primary hover:text-primary-hover transition-colors font-medium mx-4 ${
+                      location.pathname.includes(ROUTES.documentation)
+                        ? "text-indigo-700 font-bold"
+                        : ""
+                    }`}
+                  >
+                    Documentation
+                  </Link>
+                )}
                 <Link
                   to={ROUTES.contact}
                   className={`text-primary hover:text-primary-hover transition-colors font-medium mx-4 ${

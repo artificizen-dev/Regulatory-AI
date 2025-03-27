@@ -7,8 +7,8 @@ import {
   FiX,
   FiPlus,
   FiCopy,
-  // FiExternalLink,
-  // FiFile,
+  FiFile,
+  FiExternalLink,
 } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -71,6 +71,7 @@ const Chat: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rfiResponses, setRfiResponses] = useState<RFIResponse[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -210,7 +211,22 @@ const Chat: React.FC = () => {
 
       setMessages((prev) => [...prev, tempUserMessage]);
 
-      // Use the API endpoint for sending the query
+      // Add a placeholder message for the assistant response
+      const assistantMessageId = "assistant-" + Date.now().toString();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantMessageId,
+          role: "assistant",
+          content: "Generating response...",
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+
+      // Set streaming state
+      setIsStreaming(true);
+
+      // Prepare the query request
       const queryRequest: QueryRequest = {
         query: queryText,
         user_id: parseInt(userId),
@@ -218,10 +234,53 @@ const Chat: React.FC = () => {
         namespace: "buildRFI",
       };
 
-      // Make the API call
-      await axios.post(`${backendURL}/api/query-with-chat`, queryRequest);
+      // Use fetch for streaming response
+      const response = await fetch(`${backendURL}/api/query-with-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(queryRequest),
+      });
 
-      // After the query is processed, fetch the updated messages
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let streamedContent = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        streamedContent += chunk;
+
+        // Update the streaming message
+        setMessages((prev) => {
+          const updatedMessages = [...prev];
+          const assistantMsgIndex = updatedMessages.findIndex(
+            (msg) => msg.id === assistantMessageId
+          );
+
+          if (assistantMsgIndex !== -1) {
+            updatedMessages[assistantMsgIndex] = {
+              ...updatedMessages[assistantMsgIndex],
+              content: streamedContent,
+            };
+          }
+
+          return updatedMessages;
+        });
+
+        // Scroll to bottom as content streams in
+        scrollToBottom();
+      }
+
+      // Once streaming is complete, fetch messages to get the final message with metadata (sources)
+      setIsStreaming(false);
       await fetchMessages(activeChatRoomId);
     } catch (error) {
       console.error("Error processing query:", error);
@@ -233,7 +292,14 @@ const Chat: React.FC = () => {
           "An error occurred while processing your request. Please try again.",
         timestamp: new Date().toISOString(),
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => {
+        // Remove the "Generating response..." message if it exists
+        const filteredMessages = prev.filter(
+          (msg) => !msg.content.includes("Generating response...")
+        );
+        return [...filteredMessages, errorMessage];
+      });
+      setIsStreaming(false);
     } finally {
       setLoading(false);
     }
@@ -299,11 +365,10 @@ const Chat: React.FC = () => {
     });
   };
 
-  // Function to get file icon based on file type
-  // const getFileIcon = (fileType: string) => {
-  //   console.log(fileType);
-  //   return <FiFile className="mr-2" />;
-  // };
+  const getFileIcon = (fileType: string) => {
+    console.log(fileType);
+    return <FiFile className="mr-2" />;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -417,7 +482,7 @@ const Chat: React.FC = () => {
                         </div>
 
                         {/* Source links for assistant messages */}
-                        {/* {message.role === "assistant" &&
+                        {message.role === "assistant" &&
                           message.metadata?.sources &&
                           message.metadata.sources.length > 0 && (
                             <div className="mt-4 pt-3 border-t border-gray-200">
@@ -448,7 +513,7 @@ const Chat: React.FC = () => {
                                 )}
                               </div>
                             </div>
-                          )} */}
+                          )}
                       </div>
                       <div className="text-xs text-gray-500 mt-1 mx-2">
                         {new Date(message.timestamp).toLocaleTimeString([], {
@@ -459,8 +524,8 @@ const Chat: React.FC = () => {
                     </div>
                   ))}
 
-                  {/* Loading indicator */}
-                  {loading && (
+                  {/* Loading indicator (only show when not streaming) */}
+                  {loading && !isStreaming && (
                     <div className="text-center py-6">
                       <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
                     </div>
@@ -506,7 +571,6 @@ const Chat: React.FC = () => {
                 </div>
               )}
 
-              {/* Fixed input area at the bottom */}
               <div className="mt-auto bg-white rounded-lg shadow-lg border border-gray-200 mx-2 mb-4">
                 <textarea
                   className="w-full p-3 resize-none outline-none border-0 focus:ring-0 text-gray-800"
