@@ -180,3 +180,7 @@ button {
 .ant-space-gap-col-middle {
   gap: 2px !important;
 }
+
+p {
+  margin-bottom: 0;
+}
