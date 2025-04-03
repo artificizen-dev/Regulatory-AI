@@ -13,7 +13,7 @@ export interface ChatRoomsResponse {
 
 export interface Source {
   open_in: string;
-  chunk_num: number;
+  page_num?: number;
   file_name: string;
   file_type: string;
   source_url: string;
@@ -59,4 +59,10 @@ export interface FolderNode {
 export interface FolderStructureProps {
   onSelectionChange: (selectedFolders: string[]) => void;
   initialSelected?: string[];
+}
+
+export interface SourcesResponse {
+  status_code: number;
+  message: string;
+  sources: Source[];
 }

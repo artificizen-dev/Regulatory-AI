@@ -667,6 +667,7 @@ import {
   FiFile,
   FiExternalLink,
   FiFilter,
+  FiBookOpen,
 } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -677,6 +678,8 @@ import {
   MessagesResponse,
   QueryRequest,
   RFIResponse,
+  Source,
+  SourcesResponse,
 } from "../../interfaces";
 import FolderStructure from "../../components/chat/FolderStructure";
 
@@ -695,6 +698,8 @@ const Chat: React.FC = () => {
   const [product, setProduct] = useState<Product>("buildRFI");
   const [folderSidebarOpen, setFolderSidebarOpen] = useState(false);
   const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
+  const [lastSources, setLastSources] = useState<Source[]>([]);
+  const [showLastSources, setShowLastSources] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -1002,11 +1007,14 @@ const Chat: React.FC = () => {
   const fetchResources = async () => {
     try {
       if (activeChatRoomId) {
-        const response = await axios.get(
+        const response = await axios.get<SourcesResponse>(
           `${backendURL}/api/chatroom/${activeChatRoomId}/last-sources`
         );
-        console.log("Resources fetched:", response.data);
-        // Handle the resources data as needed
+
+        if (response.data && response.data.sources) {
+          setLastSources(response.data.sources);
+          setShowLastSources(response.data.sources.length > 0);
+        }
       }
     } catch (error) {
       console.error("Error fetching resources:", error);
@@ -1242,6 +1250,55 @@ const Chat: React.FC = () => {
                   <div ref={messagesEndRef} />
                 </div>
               </div>
+
+              {showLastSources && lastSources.length > 0 && (
+                <div className="bg-blue-50 rounded-lg p-4 mb-4 mx-2 border border-blue-100">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-blue-800 flex items-center">
+                      <FiBookOpen className="mr-2" /> Last Referenced Sources
+                    </h3>
+                    <button
+                      onClick={() => setShowLastSources(false)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      <FiX size={18} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {lastSources.map((source, index) => (
+                      <div
+                        key={index}
+                        className="bg-white rounded-md p-3 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <a
+                          href={source.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center text-indigo-600 hover:text-indigo-800"
+                        >
+                          {getFileIcon(source.file_type)}
+                          <div className="flex-grow min-w-0 mr-2">
+                            {" "}
+                            {/* Added min-width and margin-right */}
+                            <span className="font-medium block truncate max-w-full">
+                              {" "}
+                              {/* Added max-width */}
+                              {source.file_name.split("/").pop()}
+                            </span>
+                            {source.page_num && (
+                              <span className="text-xs text-gray-500">
+                                Page {source.page_num}
+                              </span>
+                            )}
+                          </div>
+                          <FiExternalLink size={16} className="flex-shrink-0" />{" "}
+                          {/* Added flex-shrink-0 */}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {rfiResponses.length > 0 && (
                 <div className="bg-gray-100 rounded-lg p-4 md:p-6 shadow-md mb-4 mx-2">
