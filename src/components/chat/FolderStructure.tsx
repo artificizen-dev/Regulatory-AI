@@ -5,6 +5,7 @@ import {
   FiChevronDown,
   FiFolder,
   FiFolderPlus,
+  FiCheck,
 } from "react-icons/fi";
 import { backendURL } from "../../utils/constants";
 import { FolderNode, FolderStructureProps } from "../../interfaces";
@@ -179,51 +180,56 @@ const FolderStructure: React.FC<FolderStructureProps> = ({
     return (
       <div key={folder.name} className="select-none">
         <div
-          className={`flex items-center py-1 px-2 hover:bg-gray-100 rounded-md cursor-pointer`}
+          className={`flex items-center py-2 px-2 hover:bg-gray-100 rounded-md cursor-pointer ${
+            isSelected ? "bg-indigo-50" : ""
+          }`}
           style={{ marginLeft: `${depth * 0.75}rem` }}
+          onClick={() => handleFolderSelect(folder)}
         >
           {hasChildren ? (
             <button
               onClick={(e) => toggleFolder(e, folder.name)}
-              className="mr-1 text-gray-500 hover:text-gray-700 focus:outline-none"
+              className="mr-2 text-gray-500 hover:text-gray-700 focus:outline-none"
             >
               {isExpanded ? (
-                <FiChevronDown size={16} />
+                <FiChevronDown size={18} />
               ) : (
-                <FiChevronRight size={16} />
+                <FiChevronRight size={18} />
               )}
             </button>
           ) : (
-            <span className="mr-1 w-4"></span>
+            <span className="mr-2 w-5"></span>
           )}
 
-          <div
-            className="flex items-center flex-grow"
-            onClick={() => handleFolderSelect(folder)}
-          >
-            <span className="mr-2 text-indigo-600">
-              {isSelected ? <FiFolderPlus size={18} /> : <FiFolder size={18} />}
+          <div className="flex items-center flex-grow">
+            <div className="relative mr-3">
+              {isSelected ? (
+                <FiFolderPlus size={20} className="text-indigo-600" />
+              ) : isPartiallySelected ? (
+                <div className="relative">
+                  <FiFolder size={20} className="text-indigo-400" />
+                  <div className="absolute bottom-0 right-0 w-2 h-2 bg-indigo-600 rounded-full"></div>
+                </div>
+              ) : (
+                <FiFolder size={20} className="text-gray-500" />
+              )}
+            </div>
+
+            <span
+              className={`${
+                isSelected
+                  ? "font-medium text-indigo-700"
+                  : isPartiallySelected
+                  ? "font-medium text-indigo-500"
+                  : "text-gray-800"
+              } ${depth > 0 ? "text-sm" : ""}`}
+            >
+              {folder.name}
             </span>
 
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isSelected}
-                className="mr-2 h-4 w-4 text-indigo-600 rounded"
-                onChange={() => handleFolderSelect(folder)}
-              />
-              <span
-                className={`${
-                  isSelected
-                    ? "font-medium text-indigo-700"
-                    : isPartiallySelected
-                    ? "font-medium text-indigo-500"
-                    : "text-gray-800"
-                } ${depth > 0 ? "text-sm" : ""}`}
-              >
-                {folder.name}
-              </span>
-            </label>
+            {isSelected && (
+              <FiCheck className="ml-auto text-indigo-600" size={16} />
+            )}
           </div>
         </div>
 
