@@ -807,14 +807,8 @@ const Chat: React.FC = () => {
   }, [location]);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const chatroomId = params.get("chatroom_id");
-
-    if (!chatroomId) {
-      createChatRoom();
-    } else {
-      fetchChatRooms();
-    }
+    createChatRoom();
+    fetchChatRooms();
   }, []);
 
   const createChatRoom = async () => {
