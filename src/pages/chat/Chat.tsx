@@ -767,6 +767,7 @@ import {
   SourcesResponse,
 } from "../../interfaces";
 import FolderStructure from "../../components/chat/FolderStructure";
+import VoiceInput from "../../components/chat/VoiceInput";
 
 // Product type for the tabs
 type Product = "buildRFI" | "buildGenius" | "buildRFD";
@@ -913,6 +914,7 @@ const Chat: React.FC = () => {
   };
 
   const handleSendMessage = async () => {
+    console.log("Handle send message called");
     if (!inputMessage.trim() || !activeChatRoomId) return;
 
     const queryText = inputMessage;
@@ -1196,6 +1198,131 @@ const Chat: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching resources:", error);
+    }
+  };
+
+  const handleTranscriptionReceived = (text: string) => {
+    console.log("Transcription received:", text);
+    if (text && text.trim()) {
+      // First set the input message
+      setInputMessage(text);
+
+      const messageToSend = text;
+
+      console.log("About to send message:", messageToSend);
+
+      // Small delay to allow UI to update first
+      setTimeout(() => {
+        // Directly invoke handleSendMessage with the transcribed text
+        const userId = localStorage.getItem("user_id");
+        if (!userId || !activeChatRoomId) {
+          console.error("Missing user ID or active chatroom");
+          return;
+        }
+
+        // Create a temporary user message
+        const tempUserMessage: ChatMessage = {
+          id: "temp-" + Date.now().toString(),
+          role: "user",
+          content: messageToSend,
+          timestamp: new Date().toISOString(),
+        };
+
+        // Add the user message to the conversation
+        setMessages((prev) => [...prev, tempUserMessage]);
+        setInputMessage(""); // Clear input field
+        setLoading(true);
+
+        // Create assistant message placeholder
+        const assistantMessageId = "assistant-" + Date.now().toString();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: assistantMessageId,
+            role: "assistant",
+            content: "Generating response...",
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+        setIsStreaming(true);
+
+        const queryRequest: QueryRequest = {
+          query: messageToSend,
+          user_id: parseInt(userId),
+          chatroom_id: activeChatRoomId,
+          namespace: selectedFolders.length > 0 ? selectedFolders : [],
+          product: product,
+        };
+
+        console.log("Sending transcribed message to API");
+
+        fetch(`${backendURL}/api/query-with-chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(queryRequest),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            return response.body!.getReader();
+          })
+          .then(async (reader) => {
+            const decoder = new TextDecoder();
+            let streamedContent = "";
+
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+
+              const chunk = decoder.decode(value, { stream: true });
+              streamedContent += chunk;
+
+              setMessages((prev) => {
+                const updatedMessages = [...prev];
+                const assistantMsgIndex = updatedMessages.findIndex(
+                  (msg) => msg.id === assistantMessageId
+                );
+
+                if (assistantMsgIndex !== -1) {
+                  updatedMessages[assistantMsgIndex] = {
+                    ...updatedMessages[assistantMsgIndex],
+                    content: streamedContent,
+                  };
+                }
+
+                return updatedMessages;
+              });
+
+              scrollToBottom();
+            }
+            setIsStreaming(false);
+            return fetchResources();
+          })
+          .catch((error) => {
+            console.error("Error processing query:", error);
+            // Show error message
+            const errorMessage: ChatMessage = {
+              id: "error-" + Date.now().toString(),
+              role: "assistant",
+              content:
+                "An error occurred while processing your request. Please try again.",
+              timestamp: new Date().toISOString(),
+            };
+            setMessages((prev) => {
+              const filteredMessages = prev.filter(
+                (msg) => !msg.content.includes("Generating response...")
+              );
+              return [...filteredMessages, errorMessage];
+            });
+            setIsStreaming(false);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }, 300);
     }
   };
 
@@ -1548,7 +1675,7 @@ const Chat: React.FC = () => {
                   )}
                 </div>
 
-                <div className="bg-white rounded-lg shadow-lg border border-gray-200 flex overflow-hidden">
+                <div className="bg-white rounded-lg shadow-lg border border-gray-200 flex items-center overflow-hidden">
                   <input
                     type="text"
                     className="flex-grow p-3 outline-none border-0 focus:ring-0 text-gray-800"
@@ -1578,6 +1705,12 @@ const Chat: React.FC = () => {
                     >
                       Send <span className="ml-1">&#10148;</span>
                     </button>
+                  </div>
+                  <div className="ml-2">
+                    <VoiceInput
+                      onTranscriptionReceived={handleTranscriptionReceived}
+                      disabled={loading}
+                    />
                   </div>
                 </div>
               </div>
