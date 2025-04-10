@@ -45,43 +45,13 @@ const Chat: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
-
-  const syncChatroomIdWithURL = () => {
-    const params = new URLSearchParams(location.search);
-    const chatroomId = params.get("chatroom_id");
-
-    if (chatroomId && chatroomId !== activeChatRoomId) {
-      console.log(`Syncing chatroom ID from URL: ${chatroomId}`);
-      setActiveChatRoomId(chatroomId);
-      fetchMessages(chatroomId);
-    }
-  };
-
-  // useEffect(() => {
-  //   const params = new URLSearchParams(location.search);
-  //   const chatroomId = params.get("chatroom_id");
-  //   const productParam = params.get("product") as Product | null;
-
-  //   if (chatroomId) {
-  //     setActiveChatRoomId(chatroomId);
-  //   }
-
-  //   if (
-  //     productParam &&
-  //     ["buildRFI", "buildGenius", "buildRFD"].includes(productParam)
-  //   ) {
-  //     setProduct(productParam);
-  //   }
-  // }, [location]);
+  const params = new URLSearchParams(location.search);
+  const chatroomId = params.get("chatroom_id");
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const chatroomId = params.get("chatroom_id");
     const productParam = params.get("product") as Product | null;
 
     if (chatroomId) {
-      console.log(`Setting active chatroom from URL: ${chatroomId}`);
       setActiveChatRoomId(chatroomId);
-      fetchMessages(chatroomId);
     }
 
     if (
@@ -90,10 +60,12 @@ const Chat: React.FC = () => {
     ) {
       setProduct(productParam);
     }
-  }, [location.search]);
+  }, [location]);
 
   useEffect(() => {
-    createChatRoom();
+    if (!chatroomId) {
+      createChatRoom();
+    }
     fetchChatRooms();
   }, []);
 
@@ -183,24 +155,8 @@ const Chat: React.FC = () => {
     scrollToBottom();
   }, [messages, rfiResponses]);
 
-  // const fetchMessages = async (chatRoomId: string) => {
-  //   try {
-  //     const response = await axios.get<MessagesResponse>(
-  //       `${backendURL}/api/chatroom-messages/${chatRoomId}`
-  //     );
-
-  //     if (response.data && response.data.messages) {
-  //       setMessages(response.data.messages);
-  //       setRfiResponses([]);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching messages:", error);
-  //   }
-  // };
-
   const fetchMessages = async (chatRoomId: string) => {
     try {
-      console.log(`Fetching messages for chatroom: ${chatRoomId}`);
       const response = await axios.get<MessagesResponse>(
         `${backendURL}/api/chatroom-messages/${chatRoomId}`
       );
@@ -210,7 +166,7 @@ const Chat: React.FC = () => {
         setRfiResponses([]);
       }
     } catch (error) {
-      console.error(`Error fetching messages for ${chatRoomId}:`, error);
+      console.error("Error fetching messages:", error);
     }
   };
 
@@ -326,43 +282,6 @@ const Chat: React.FC = () => {
     }
   };
 
-  // const createNewChatRoom = async () => {
-  //   try {
-  //     const userId = localStorage.getItem("user_id");
-
-  //     if (!userId) {
-  //       console.error("User ID not found in local storage");
-  //       return;
-  //     }
-
-  //     const response = await axios.post(`${backendURL}/api/chatrooms`, {
-  //       user_id: userId,
-  //     });
-
-  //     if (response.data && response.data.chatroom_id) {
-  //       const newChatroomId = response.data.chatroom_id;
-
-  //       // Update URL with the new chatroom_id and product
-  //       navigate(`/chat?chatroom_id=${newChatroomId}&product=${product}`);
-
-  //       // Add new chat room to the list with product in title
-  //       const newChatRoom: ChatRoom = {
-  //         id: newChatroomId,
-  //         title: product ? `${product} Chat` : "New Chat",
-  //         created_at: new Date().toISOString(),
-  //       };
-
-  //       setChatRooms((prev) => [newChatRoom, ...prev]);
-  //       setActiveChatRoomId(newChatroomId);
-  //       setMessages([]);
-  //       setRfiResponses([]);
-  //       setSidebarOpen(false);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error creating new chat room:", error);
-  //   }
-  // };
-
   const createNewChatRoom = async () => {
     try {
       const userId = localStorage.getItem("user_id");
@@ -378,14 +297,6 @@ const Chat: React.FC = () => {
 
       if (response.data && response.data.chatroom_id) {
         const newChatroomId = response.data.chatroom_id;
-        console.log(`Created new chatroom: ${newChatroomId}`);
-
-        // Set the active chatroom ID first
-        setActiveChatRoomId(newChatroomId);
-
-        // Clear messages immediately
-        setMessages([]);
-        setRfiResponses([]);
 
         // Update URL with the new chatroom_id and product
         navigate(`/chat?chatroom_id=${newChatroomId}&product=${product}`);
@@ -398,6 +309,9 @@ const Chat: React.FC = () => {
         };
 
         setChatRooms((prev) => [newChatRoom, ...prev]);
+        setActiveChatRoomId(newChatroomId);
+        setMessages([]);
+        setRfiResponses([]);
         setSidebarOpen(false);
       }
     } catch (error) {
@@ -422,16 +336,6 @@ const Chat: React.FC = () => {
 
       if (response.data && response.data.chatroom_id) {
         const newChatroomId = response.data.chatroom_id;
-        console.log(
-          `Created new chatroom for product ${newProduct}: ${newChatroomId}`
-        );
-
-        // Set the active chatroom ID first
-        setActiveChatRoomId(newChatroomId);
-
-        // Clear messages immediately
-        setMessages([]);
-        setRfiResponses([]);
 
         // Update URL with the new chatroom_id and product
         navigate(`/chat?chatroom_id=${newChatroomId}&product=${newProduct}`);
@@ -439,11 +343,14 @@ const Chat: React.FC = () => {
         // Add new chat room to the list
         const newChatRoom: ChatRoom = {
           id: newChatroomId,
-          title: `${newProduct} Chat`,
+          title: `${newProduct} Chat`, // Better title reflecting the product
           created_at: new Date().toISOString(),
         };
 
         setChatRooms((prev) => [newChatRoom, ...prev]);
+        setActiveChatRoomId(newChatroomId);
+        setMessages([]);
+        setRfiResponses([]);
 
         // Optionally close sidebars if they're open
         setSidebarOpen(false);
@@ -454,61 +361,7 @@ const Chat: React.FC = () => {
     }
   };
 
-  // const createNewChatRoomForProduct = async (
-  //   newProduct: Product
-  // ): Promise<void> => {
-  //   try {
-  //     const userId = localStorage.getItem("user_id");
-
-  //     if (!userId) {
-  //       console.error("User ID not found in local storage");
-  //       return;
-  //     }
-
-  //     const response = await axios.post(`${backendURL}/api/chatrooms`, {
-  //       user_id: userId,
-  //     });
-
-  //     if (response.data && response.data.chatroom_id) {
-  //       const newChatroomId = response.data.chatroom_id;
-
-  //       // Update URL with the new chatroom_id and product
-  //       navigate(`/chat?chatroom_id=${newChatroomId}&product=${newProduct}`);
-
-  //       // Add new chat room to the list
-  //       const newChatRoom: ChatRoom = {
-  //         id: newChatroomId,
-  //         title: `${newProduct} Chat`, // Better title reflecting the product
-  //         created_at: new Date().toISOString(),
-  //       };
-
-  //       setChatRooms((prev) => [newChatRoom, ...prev]);
-  //       setActiveChatRoomId(newChatroomId);
-  //       setMessages([]);
-  //       setRfiResponses([]);
-
-  //       // Optionally close sidebars if they're open
-  //       setSidebarOpen(false);
-  //       setFolderSidebarOpen(false);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error creating new chat room for product change:", error);
-  //   }
-  // };
-
   // Handle product tab change
-
-  // const handleProductChange = (newProduct: Product) => {
-  //   if (product !== newProduct) {
-  //     setProduct(newProduct);
-  //     setProductSwitching(true); // Start loading
-
-  //     // Create a new chat room when switching tabs
-  //     createNewChatRoomForProduct(newProduct).finally(() => {
-  //       setProductSwitching(false); // End loading regardless of outcome
-  //     });
-  //   }
-  // };
 
   const handleProductChange = (newProduct: Product) => {
     if (product !== newProduct) {
@@ -516,14 +369,9 @@ const Chat: React.FC = () => {
       setProductSwitching(true); // Start loading
 
       // Create a new chat room when switching tabs
-      createNewChatRoomForProduct(newProduct)
-        .then(() => {
-          // Ensure URL and state are in sync after navigation
-          syncChatroomIdWithURL();
-        })
-        .finally(() => {
-          setProductSwitching(false); // End loading regardless of outcome
-        });
+      createNewChatRoomForProduct(newProduct).finally(() => {
+        setProductSwitching(false); // End loading regardless of outcome
+      });
     }
   };
 
@@ -741,10 +589,6 @@ const Chat: React.FC = () => {
     }
   }, [activeChatRoomId]);
 
-  useEffect(() => {
-    syncChatroomIdWithURL();
-  }, [location.search]);
-
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -841,19 +685,6 @@ const Chat: React.FC = () => {
                           ? "bg-indigo-50 border-l-4 border-indigo-500"
                           : ""
                       }`}
-                      // onClick={() => {
-                      //   setActiveChatRoomId(room.id);
-                      //   // If we know the product for this room, update the product state
-                      //   if (roomProduct) {
-                      //     setProduct(roomProduct);
-                      //   }
-                      //   navigate(
-                      //     `/chat?chatroom_id=${room.id}&product=${
-                      //       roomProduct || product
-                      //     }`
-                      //   );
-                      //   setSidebarOpen(false);
-                      // }}
                       onClick={() => {
                         setActiveChatRoomId(room.id);
                         // If we know the product for this room, update the product state
@@ -866,8 +697,6 @@ const Chat: React.FC = () => {
                           }`
                         );
                         setSidebarOpen(false);
-                        // Add this to ensure sync after navigation
-                        setTimeout(syncChatroomIdWithURL, 100);
                       }}
                     >
                       <div className="flex justify-between items-center">
