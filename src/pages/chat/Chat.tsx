@@ -141,7 +141,6 @@ const Chat: React.FC = () => {
 
         if (!activeChatRoomId && response.data.chatrooms.length > 0) {
           const firstChatroomId = response.data.chatrooms[0].id;
-          setActiveChatRoomId(firstChatroomId);
 
           navigate(`/chat?chatroom_id=${firstChatroomId}&product=${product}`);
         }
