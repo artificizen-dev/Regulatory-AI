@@ -1,7 +1,5 @@
 import React, { Suspense, lazy, useState } from "react";
 import Navbar from "../../components/Navbar/Navbar";
-
-// Lazy loading components
 const UploadDocuments = lazy(
   () => import("../../components/documentationComponents/UploadDocuments")
 );

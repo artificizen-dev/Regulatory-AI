@@ -22,6 +22,7 @@ const FolderStructure: React.FC<FolderStructureProps> = ({
     useState<string[]>(initialSelected);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const userId = localStorage.getItem("user_id");
 
   // Fetch folder hierarchy data
   useEffect(() => {
@@ -29,7 +30,7 @@ const FolderStructure: React.FC<FolderStructureProps> = ({
       try {
         setLoading(true);
         const response = await axios.get(
-          `${backendURL}/api/get-folders-hierarchy`
+          `${backendURL}/api/get-folders-hierarchy?user_id=${userId}`
         );
         setFolderHierarchy(response.data);
 

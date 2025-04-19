@@ -10,6 +10,7 @@ import {
   FiFile,
   FiExternalLink,
   FiFilter,
+  FiInfo,
 } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -18,15 +19,14 @@ import {
   ChatRoom,
   ChatRoomsResponse,
   MessagesResponse,
+  Product,
   QueryRequest,
   RFIResponse,
   SourcesResponse,
 } from "../../interfaces";
 import FolderStructure from "../../components/chat/FolderStructure";
 import VoiceInput from "../../components/chat/VoiceInput";
-
-// Product type for the tabs
-type Product = "buildRFI" | "buildGenius" | "buildRFD";
+import SystemPromptModal from "../../components/chat/SystemPrompt";
 
 const Chat: React.FC = () => {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
@@ -42,11 +42,22 @@ const Chat: React.FC = () => {
   const [selectedFolders, setSelectedFolders] = useState<string[]>([]);
   // New state for product switching
   const [productSwitching, setProductSwitching] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const chatroomId = params.get("chatroom_id");
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
   useEffect(() => {
     const productParam = params.get("product") as Product | null;
 
@@ -133,10 +144,6 @@ const Chat: React.FC = () => {
           setActiveChatRoomId(firstChatroomId);
 
           navigate(`/chat?chatroom_id=${firstChatroomId}&product=${product}`);
-
-          fetchMessages(firstChatroomId);
-        } else if (activeChatRoomId) {
-          fetchMessages(activeChatRoomId);
         }
       }
     } catch (error) {
@@ -144,13 +151,23 @@ const Chat: React.FC = () => {
     }
   };
 
+  // useEffect(() => {
+  //   if (activeChatRoomId) {
+  //     fetchMessages(activeChatRoomId);
+  //   }
+  // }, [activeChatRoomId]);
   useEffect(() => {
     if (activeChatRoomId) {
-      fetchMessages(activeChatRoomId);
-    }
-  }, [activeChatRoomId]);
+      const currentRoom = chatRooms.find(
+        (room) => room.id === activeChatRoomId
+      );
 
-  // Scroll to bottom when messages change
+      if (currentRoom || chatroomId === activeChatRoomId) {
+        fetchMessages(activeChatRoomId);
+      }
+    }
+  }, [activeChatRoomId, chatRooms, chatroomId]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, rfiResponses]);
@@ -213,6 +230,7 @@ const Chat: React.FC = () => {
         chatroom_id: activeChatRoomId,
         namespace: selectedFolders.length > 0 ? selectedFolders : [],
         product: product,
+        system_prompt: systemPrompt,
       };
 
       const response = await fetch(`${backendURL}/api/query-with-chat`, {
@@ -509,6 +527,7 @@ const Chat: React.FC = () => {
           chatroom_id: activeChatRoomId,
           namespace: selectedFolders.length > 0 ? selectedFolders : [],
           product: product,
+          system_prompt: systemPrompt,
         };
 
         console.log("Sending transcribed message to API");
@@ -583,8 +602,14 @@ const Chat: React.FC = () => {
     }
   };
 
+  // useEffect(() => {
+  //   if (activeChatRoomId) {
+  //     fetchResources();
+  //   }
+  // }, [activeChatRoomId]);
   useEffect(() => {
-    if (activeChatRoomId) {
+    if (activeChatRoomId && messages.length > 0) {
+      // Only fetch resources if there are messages in this chat
       fetchResources();
     }
   }, [activeChatRoomId]);
@@ -617,6 +642,17 @@ const Chat: React.FC = () => {
                 <FiMenu size={24} />
               </button>
             )}
+
+            <div className="fixed top-35 right-4 z-50 flex items-center">
+              <button
+                type="button"
+                onClick={openModal}
+                className={`items-center p-2 rounded-full bg-indigo-600 !text-white shadow-lg flex`}
+                title="View System Prompt"
+              >
+                <FiInfo className="mr-1" size={16} /> System Prompt
+              </button>
+            </div>
 
             {/* Filter button to open folder structure */}
             <div className="fixed top-20 right-4 z-50 flex items-center">
@@ -975,6 +1011,14 @@ const Chat: React.FC = () => {
           </div>
         </div>
       </div>
+      {isModalOpen && (
+        <SystemPromptModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          product={product}
+          setSystemPrompt={setSystemPrompt}
+        />
+      )}
     </div>
   );
 };

@@ -3,7 +3,6 @@
 @import "antd/dist/reset.css";
 
 :root {
-  /* Main color scheme - Black and White */
   --color-primary: #000000;
   --color-primary-hover: #333333;
   --color-secondary: #ffffff;
@@ -11,24 +10,20 @@
   --color-accent: #cccccc;
   --color-accent-hover: #aaaaaa;
 
-  /* Background colors */
   --color-bg-dark: #121212;
   --color-bg-light: #ffffff;
   --color-bg-gray: #f5f5f5;
 
-  /* Text colors */
   --color-text-primary: #000000;
   --color-text-secondary: #555555;
   --color-text-light: #ffffff;
   --color-text-disabled: #999999;
 
-  /* Shadows */
   --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-button: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
     0 1px 2px 0 rgba(0, 0, 0, 0.06);
 
-  /* Font settings */
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   line-height: 1.5;
@@ -46,7 +41,6 @@
 
 a {
   font-weight: 500;
-  /* color: var(--color-primary); */
   text-decoration: inherit;
 }
 a:hover {

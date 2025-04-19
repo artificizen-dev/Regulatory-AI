@@ -42,6 +42,7 @@ export interface QueryRequest {
   chatroom_id: string;
   namespace: string[] | string;
   product: string;
+  system_prompt: string;
 }
 
 export interface RFIResponse {
@@ -65,4 +66,39 @@ export interface SourcesResponse {
   status_code: number;
   message: string;
   sources: Source[];
+}
+
+export interface PreviousDocumentsProps {
+  refreshKey: number;
+}
+
+export interface DocumentFile {
+  document_name: string;
+  id: number;
+  bucket_path: string;
+  document_type: string;
+  namespace: string;
+  user_id: number | string;
+}
+
+export interface DocumentsResponse {
+  status_code: number;
+  files: DocumentFile[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export type Product = "buildRFI" | "buildGenius" | "buildRFD";
+
+export interface SystemPrompt {
+  title: string;
+  content: string;
+}
+
+export interface SystemPromptModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  product?: Product;
+  setSystemPrompt?: (prompt: string) => void;
 }
