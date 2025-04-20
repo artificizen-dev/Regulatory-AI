@@ -466,18 +466,16 @@ const Navbar: React.FC = () => {
                 >
                   Chat
                 </Link>
-                {activeUser?.isAdmin && (
-                  <Link
-                    to={ROUTES.documentation}
-                    className={`text-primary hover:text-primary-hover transition-colors font-medium mx-4 ${
-                      location.pathname.includes(ROUTES.documentation)
-                        ? "text-indigo-700 font-bold"
-                        : ""
-                    }`}
-                  >
-                    Documentation
-                  </Link>
-                )}
+                <Link
+                  to={ROUTES.documentation}
+                  className={`text-primary hover:text-primary-hover transition-colors font-medium mx-4 ${
+                    location.pathname.includes(ROUTES.documentation)
+                      ? "text-indigo-700 font-bold"
+                      : ""
+                  }`}
+                >
+                  Documentation
+                </Link>
                 <Link
                   to={ROUTES.contact}
                   className={`text-primary hover:text-primary-hover transition-colors font-medium mx-4 ${
