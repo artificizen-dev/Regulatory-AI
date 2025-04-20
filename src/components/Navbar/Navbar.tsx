@@ -551,20 +551,19 @@ const Navbar: React.FC = () => {
                   <FiMessageSquare className="mr-2" />
                   Chat
                 </Link>
-                {activeUser?.isAdmin && (
-                  <Link
-                    to={ROUTES.documentation}
-                    className={`flex items-center px-4 py-2 text-sm hover:bg-gray-100 ${
-                      location.pathname.includes(ROUTES.documentation)
-                        ? "text-indigo-700 font-bold"
-                        : "text-gray-700"
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <FiFileText className="mr-2" />
-                    Documentation
-                  </Link>
-                )}
+
+                <Link
+                  to={ROUTES.documentation}
+                  className={`flex items-center px-4 py-2 text-sm hover:bg-gray-100 ${
+                    location.pathname.includes(ROUTES.documentation)
+                      ? "text-indigo-700 font-bold"
+                      : "text-gray-700"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <FiFileText className="mr-2" />
+                  Documentation
+                </Link>
                 <Link
                   to={ROUTES.contact}
                   className={`flex items-center px-4 py-2 text-sm hover:bg-gray-100 ${
