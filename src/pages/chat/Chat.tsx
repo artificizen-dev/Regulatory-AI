@@ -139,11 +139,11 @@ const Chat: React.FC = () => {
       if (response.data && response.data.chatrooms) {
         setChatRooms(response.data.chatrooms);
 
-        if (!activeChatRoomId && response.data.chatrooms.length > 0) {
-          const firstChatroomId = response.data.chatrooms[0].id;
+        // if (!activeChatRoomId && response.data.chatrooms.length > 0) {
+        //   const firstChatroomId = response.data.chatrooms[0].id;
 
-          navigate(`/chat?chatroom_id=${firstChatroomId}&product=${product}`);
-        }
+        //   navigate(`/chat?chatroom_id=${firstChatroomId}&product=${product}`);
+        // }
       }
     } catch (error) {
       console.error("Error fetching chat rooms:", error);
